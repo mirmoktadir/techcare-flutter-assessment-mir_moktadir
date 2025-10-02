@@ -2,6 +2,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:flutter_sticky_header/flutter_sticky_header.dart';
+import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/utils/number_formatter.dart';
@@ -32,8 +34,7 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
-    // Load all required data
-    context.read<TransactionBloc>().add(LoadTransactions(1, {}));
+    context.read<TransactionBloc>().add(LoadTransactions(1, {}, limit: 10));
     context.read<AnalyticsBloc>().add(LoadAnalytics());
     context.read<CategoryBloc>().add(LoadCategories());
   }
@@ -41,163 +42,160 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: () async {
-          context.read<TransactionBloc>().add(LoadTransactions(1, {}));
-          context.read<AnalyticsBloc>().add(LoadAnalytics());
-        },
-        child: CustomScrollView(
-          slivers: [
-            // 🔹 Header with Parallax
-            SliverAppBar(
-              pinned: true,
-              expandedHeight: 100,
-              flexibleSpace: FlexibleSpaceBar(
-                titlePadding: const EdgeInsets.all(16),
-                title: Row(
-                  children: [
-                    const Text(
-                      'Finance Tracker',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Spacer(),
-                    Stack(
-                      children: [
-                        const CircleAvatar(
-                          radius: 18,
-                          backgroundColor: Colors.white30,
-                          child: Icon(Icons.person, color: Colors.white),
+      body: SafeArea(
+        top: false,
+        child: RefreshIndicator(
+          onRefresh: () async {
+            context.read<TransactionBloc>().add(LoadTransactions(1, {}));
+            context.read<AnalyticsBloc>().add(LoadAnalytics());
+          },
+          child: CustomScrollView(
+            slivers: [
+              // 🔹 Header with Parallax
+              SliverAppBar(
+                pinned: true,
+                expandedHeight: 100,
+                flexibleSpace: FlexibleSpaceBar(
+                  titlePadding: const EdgeInsets.all(16),
+                  title: Row(
+                    children: [
+                      const Text(
+                        'Finance Tracker',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black54,
                         ),
-                        Positioned(
-                          top: 2,
-                          right: 2,
-                          child: Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: const BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Text(
-                              '3',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.white,
+                      ),
+                      const Spacer(),
+                      SizedBox(
+                        height: 40,
+                        width: 100,
+                        child: Stack(
+                          children: [
+                            Positioned(
+                              bottom: 0,
+                              right: 2,
+                              child: const CircleAvatar(
+                                radius: 18,
+                                backgroundColor: Colors.white30,
+                                child: Icon(Icons.person, color: Colors.white),
                               ),
                             ),
-                          ),
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Text(
+                                  '3',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ],
-                ),
-                background: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xFF4A00E0), Color(0xFF8E2DE2)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+                      ),
+                    ],
+                  ),
+                  background: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF10A1D9), Color(0xFF9EF3E8)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
 
-            // 🔹 Balance Card
-            SliverToBoxAdapter(
-              child: BlocBuilder<AnalyticsBloc, AnalyticsState>(
-                builder: (context, state) {
-                  if (state is AnalyticsLoaded) {
-                    return BalanceCard(
-                      balance: state.data.summary.netBalance,
-                      income: state.data.summary.totalIncome,
-                      expense: state.data.summary.totalExpense,
-                      showBalance: _showBalance,
-                      onToggle: () =>
-                          setState(() => _showBalance = !_showBalance),
-                    );
-                  } else if (state is AnalyticsLoading) {
-                    return _buildBalanceShimmer();
-                  } else {
-                    return _buildErrorCard('Failed to load balance');
-                  }
-                },
+              // 🔹 Balance Card
+              SliverToBoxAdapter(
+                child: BlocBuilder<AnalyticsBloc, AnalyticsState>(
+                  builder: (context, state) {
+                    if (state is AnalyticsLoaded) {
+                      return BalanceCard(
+                        balance: state.data.summary.netBalance,
+                        income: state.data.summary.totalIncome,
+                        expense: state.data.summary.totalExpense,
+                        showBalance: _showBalance,
+                        onToggle: () =>
+                            setState(() => _showBalance = !_showBalance),
+                      );
+                    } else if (state is AnalyticsLoading) {
+                      return _buildBalanceShimmer();
+                    } else {
+                      return _buildErrorCard('Failed to load balance');
+                    }
+                  },
+                ),
               ),
-            ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+              const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-            // 🔹 Spending Pie Chart
-            SliverToBoxAdapter(
-              child: BlocBuilder<AnalyticsBloc, AnalyticsState>(
-                builder: (context, state) {
-                  if (state is AnalyticsLoaded) {
-                    final breakdown = state.data.categoryBreakdown
-                        .where(
-                          (b) =>
-                              b.category.id != 'cat_income' &&
-                              b.category.id != 'cat_freelance',
-                        )
-                        .toList();
-                    return _buildPieChart(breakdown);
-                  } else if (state is AnalyticsLoading) {
-                    return _buildChartShimmer();
-                  } else {
-                    return _buildErrorCard('Failed to load spending data');
-                  }
-                },
+              // 🔹 Spending Pie Chart
+              SliverToBoxAdapter(
+                child: BlocBuilder<AnalyticsBloc, AnalyticsState>(
+                  builder: (context, state) {
+                    if (state is AnalyticsLoaded) {
+                      final breakdown = state.data.categoryBreakdown
+                          .where(
+                            (b) =>
+                                b.category.id != 'cat_income' &&
+                                b.category.id != 'cat_freelance',
+                          )
+                          .toList();
+                      return _buildPieChart(breakdown);
+                    } else if (state is AnalyticsLoading) {
+                      return _buildChartShimmer();
+                    } else {
+                      return _buildErrorCard('Failed to load spending data');
+                    }
+                  },
+                ),
               ),
-            ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+              const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-            // 🔹 Recent Transactions
-            SliverToBoxAdapter(
-              child: BlocBuilder<TransactionBloc, TransactionState>(
-                builder: (context, state) {
-                  if (state is TransactionLoaded) {
-                    final grouped = _groupTransactionsByDate(
-                      state.transactions,
-                    );
-                    return _buildTransactionGroups(grouped, context);
-                  } else if (state is TransactionLoading) {
-                    return _buildTransactionListShimmer();
-                  } else {
-                    return _buildErrorCard('Failed to load transactions');
-                  }
-                },
+              // 🔹 Recent Transactions
+              SliverToBoxAdapter(
+                child: BlocBuilder<TransactionBloc, TransactionState>(
+                  builder: (context, state) {
+                    if (state is TransactionLoaded) {
+                      final grouped = _groupTransactionsByDate(
+                        state.transactions,
+                      );
+                      return _buildTransactionGroups(grouped, context);
+                    } else if (state is TransactionLoading) {
+                      return _buildTransactionListShimmer();
+                    } else {
+                      return _buildErrorCard('Failed to load transactions');
+                    }
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        mini: true,
         onPressed: () {
-          showModalBottomSheet(
-            context: context,
-            builder: (context) => SizedBox(
-              height: 140,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildFabOption(
-                    'Add Income',
-                    Icons.arrow_upward,
-                    Colors.green,
-                    'income',
-                    context,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildFabOption(
-                    'Add Expense',
-                    Icons.arrow_downward,
-                    Colors.red,
-                    'expense',
-                    context,
-                  ),
-                ],
+          final bloc = context.read<TransactionBloc>(); // get existing instance
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BlocProvider.value(
+                value: bloc,
+                child: const AddTransactionPage(),
               ),
             ),
           );
@@ -208,15 +206,17 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   // 🔹 GROUP TRANSACTIONS BY DATE
-  Map<String, List<Transaction>> _groupTransactionsByDate(
+  Map<DateTime, List<Transaction>> _groupTransactionsByDate(
     List<Transaction> transactions,
   ) {
-    final map = <String, List<Transaction>>{};
+    final map = <DateTime, List<Transaction>>{};
     for (var txn in transactions.take(10)) {
-      final key = '${txn.date.day}/${txn.date.month}';
-      map.putIfAbsent(key, () => []).add(txn);
+      final date = DateTime(txn.date.year, txn.date.month, txn.date.day);
+      map.putIfAbsent(date, () => []).add(txn);
     }
-    return map;
+
+    final sortedKeys = map.keys.toList()..sort((a, b) => b.compareTo(a));
+    return {for (var key in sortedKeys) key: map[key]!};
   }
 
   // 🔹 SWIPEABLE TRANSACTION ITEM
@@ -264,11 +264,13 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   void _editTransaction(Transaction txn, BuildContext context) {
+    final bloc = context.read<TransactionBloc>();
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => BlocProvider.value(
-          value: context.read<TransactionBloc>(),
+          value: bloc,
           child: AddTransactionPage(transaction: txn),
         ),
       ),
@@ -277,38 +279,6 @@ class _DashboardPageState extends State<DashboardPage> {
 
   void _deleteTransaction(String id, BuildContext context) {
     context.read<TransactionBloc>().add(DeleteTransaction(id));
-  }
-
-  // 🔹 FAB OPTIONS
-  Widget _buildFabOption(
-    String label,
-    IconData icon,
-    Color color,
-    String type,
-    BuildContext context,
-  ) {
-    return ElevatedButton.icon(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      ),
-      icon: Icon(icon),
-      label: Text(label),
-      onPressed: () {
-        Navigator.pop(context);
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => BlocProvider.value(
-              value: context.read<TransactionBloc>(),
-              child: AddTransactionPage(type: type),
-            ),
-          ),
-        );
-      },
-    );
   }
 
   // 🔹 PIE CHART
@@ -326,7 +296,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
             const SizedBox(height: 12),
             AspectRatio(
-              aspectRatio: 1,
+              aspectRatio: 1.15,
               child: PieChart(
                 PieChartData(
                   sections: breakdown.map((b) {
@@ -336,7 +306,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         int.parse(b.category.color.substring(1), radix: 16) +
                             0xFF000000,
                       ),
-                      radius: 50,
+                      radius: 60,
                       title: '${b.percentage.toStringAsFixed(1)}%',
                       titleStyle: TextStyle(
                         fontSize: 12,
@@ -347,7 +317,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     );
                   }).toList(),
                   sectionsSpace: 2,
-                  centerSpaceRadius: 60,
+                  centerSpaceRadius: 45,
                   startDegreeOffset: -90,
                   pieTouchData: PieTouchData(
                     touchCallback: (FlTouchEvent event, pieTouchResponse) {
@@ -459,7 +429,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   // 🔹 TRANSACTION GROUPS
   Widget _buildTransactionGroups(
-    Map<String, List<Transaction>> grouped,
+    Map<DateTime, List<Transaction>> grouped,
     BuildContext context,
   ) {
     return Column(
@@ -473,38 +443,60 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ),
         const SizedBox(height: 8),
-        ...grouped.entries.map((entry) {
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  entry.key,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+
+        SizedBox(
+          height: 400,
+          child: CustomScrollView(
+            slivers: [
+              for (int index = 0; index < grouped.length; index++)
+                SliverStickyHeader(
+                  header: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    color: Colors.grey[200],
+                    child: Text(
+                      _formatDate(grouped.keys.elementAt(index)),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate(
+                      grouped.values
+                          .elementAt(index)
+                          .map((txn) => _buildSwipeableItem(txn, context))
+                          .toList(),
+                    ),
+                  ),
                 ),
-              ),
-              ...entry.value.map((txn) => _buildSwipeableItem(txn, context)),
             ],
-          );
-        }),
+          ),
+        ),
         TextButton(
           onPressed: () {
-            // 🔹 Get the existing BLoC instance from current context
             final transactionBloc = context.read<TransactionBloc>();
 
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => BlocProvider.value(
-                  value: transactionBloc, // 👈 Reuse existing instance
+                  value: transactionBloc,
                   child: const TransactionsPage(),
                 ),
               ),
             );
           },
-          child: const Text('View All Transactions'),
+          child: const Text(
+            'View All Transactions',
+            style: TextStyle(fontSize: 16),
+          ),
         ),
       ],
     );
+  }
+
+  String _formatDate(DateTime date) {
+    return DateFormat('MMMM d, yyyy').format(date); // e.g., "October 1, 2025"
   }
 }

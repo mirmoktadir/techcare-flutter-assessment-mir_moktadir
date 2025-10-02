@@ -7,11 +7,12 @@ abstract class TransactionEvent extends Equatable {}
 class LoadTransactions extends TransactionEvent {
   final int page;
   final Map<String, dynamic> filters;
+  final int limit;
 
-  LoadTransactions(this.page, this.filters);
+  LoadTransactions(this.page, this.filters, {this.limit = 20});
 
   @override
-  List<Object?> get props => [page, filters];
+  List<Object?> get props => [page, filters, limit];
 }
 
 class AddTransaction extends TransactionEvent {

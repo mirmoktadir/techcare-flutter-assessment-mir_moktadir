@@ -26,13 +26,13 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       final newTransactions = await _repository.getTransactions(
         page: event.page,
         type: event.filters['type'],
-        /**/
+        limit: event.limit,
         category: event.filters['category'],
       );
 
       if (event.page == 1) {
-        // First page — replace list
-        emit(TransactionLoaded(newTransactions, newTransactions.length == 20));
+        final hasMore = newTransactions.length == event.limit;
+        emit(TransactionLoaded(newTransactions, hasMore));
       } else {
         // Subsequent page — append
         if (state is TransactionLoaded) {

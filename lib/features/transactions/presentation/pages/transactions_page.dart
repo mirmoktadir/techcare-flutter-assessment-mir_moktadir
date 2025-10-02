@@ -76,12 +76,12 @@ class _TransactionsPageState extends State<TransactionsPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          final bloc = context.read<TransactionBloc>(); // get existing instance
+          final bloc = context.read<TransactionBloc>();
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => BlocProvider.value(
-                value: bloc, // 👈 reuse existing BLoC
+                value: bloc,
                 child: const AddTransactionPage(),
               ),
             ),

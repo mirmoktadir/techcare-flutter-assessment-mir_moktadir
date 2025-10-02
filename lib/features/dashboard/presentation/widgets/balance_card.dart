@@ -62,80 +62,117 @@ class _BalanceCardState extends State<BalanceCard>
   @override
   Widget build(BuildContext context) {
     return Card(
+      elevation: 0, // no default shadow, we use custom
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
-        child: Container(
-          color: Colors.white.withValues(alpha: 0.95),
-          child: InkWell(
-            onTap: widget.onToggle,
-            child: AnimatedBuilder(
-              animation: _animation,
-              builder: (context, child) {
-                final angle = _animation.value * 3.14159;
-                return Transform(
-                  transform: Matrix4.identity()
-                    ..setEntry(3, 2, 0.001)
-                    ..rotateY(angle),
-                  alignment: Alignment.center,
-                  child: angle > 1.57 ? _buildBack() : _buildFront(),
-                );
-              },
-            ),
+        child: InkWell(
+          onTap: widget.onToggle,
+          child: AnimatedBuilder(
+            animation: _animation,
+            builder: (context, child) {
+              final angle = _animation.value * 3.14159;
+              return Transform(
+                transform: Matrix4.identity()
+                  ..setEntry(3, 2, 0.001)
+                  ..rotateY(angle),
+                alignment: Alignment.center,
+                child: angle > 1.57
+                    ? Transform(
+                        alignment: Alignment.center,
+                        transform: Matrix4.identity()..rotateY(3.14159),
+                        child: _buildBack(),
+                      )
+                    : _buildFront(),
+              );
+            },
           ),
         ),
       ),
     );
   }
 
-  Widget _buildFront() {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Total Balance',
-            style: TextStyle(fontSize: 16, color: Colors.grey),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            NumberFormatter.format(widget.balance),
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _buildSummary('Income', widget.income, Colors.green),
-              const SizedBox(width: 24),
-              _buildSummary('Expense', widget.expense, Colors.red),
-            ],
+  /// Fake glass effect (works even on white background)
+  Widget _glassContainer({required Widget child}) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.white.withValues(alpha: 0.8),
+            Colors.white.withValues(alpha: 0.4),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.grey.withValues(alpha: 0.2),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 12,
+            spreadRadius: 1,
+            offset: const Offset(0, 6),
           ),
         ],
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildFront() {
+    return _glassContainer(
+      child: Padding(
+        padding: const EdgeInsets.all(22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Total Balance',
+              style: TextStyle(fontSize: 18, color: Colors.black54),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              NumberFormatter.format(widget.balance),
+              style: const TextStyle(
+                fontSize: 34,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                _buildSummary('Income', widget.income, Colors.green),
+                const SizedBox(width: 40),
+                _buildSummary('Expense', widget.expense, Colors.red),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildBack() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.visibility_off, size: 48, color: Colors.grey),
-            SizedBox(height: 12),
-            Text(
-              'Tap to show balance',
-              style: TextStyle(fontSize: 16, color: Colors.black),
-            ),
-          ],
+    return _glassContainer(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(Icons.visibility_off, size: 52, color: Colors.black54),
+              SizedBox(height: 14),
+              Text(
+                'Tap to show balance',
+                style: TextStyle(fontSize: 16, color: Colors.black54),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -145,16 +182,14 @@ class _BalanceCardState extends State<BalanceCard>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 14, color: Colors.white70),
-        ),
+        Text(label, style: TextStyle(fontSize: 14, color: color)),
+        const SizedBox(height: 4),
         Text(
           NumberFormatter.format(amount),
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 18,
             color: color,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
