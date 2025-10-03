@@ -164,8 +164,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
               onRefresh: () async => _loadTransactions(),
               child: BlocBuilder<TransactionBloc, TransactionState>(
                 builder: (context, state) {
-                  if (state is TransactionLoading &&
-                      state.transactions == null) {
+                  if (state is TransactionLoading) {
                     return _buildShimmerList();
                   } else if (state is TransactionLoaded) {
                     if (state.transactions.isEmpty) {
@@ -175,7 +174,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
                   } else if (state is TransactionError) {
                     return Center(child: Text('Error: ${state.message}'));
                   } else {
-                    return const Center(child: Text('No data'));
+                    return _buildShimmerList();
                   }
                 },
               ),
