@@ -29,6 +29,15 @@ class _TransactionsPageState extends State<TransactionsPage> {
   bool _isSearching = false;
   late StreamController<String> _searchStreamController;
   StreamSubscription? _searchSubscription;
+  final List<String> _allCategories = [
+    'Food & Dining',
+    'Transportation',
+    'Shopping',
+    'Entertainment',
+    'Bills & Utilities',
+    'Salary',
+    'Freelance',
+  ];
   @override
   void initState() {
     super.initState();
@@ -143,11 +152,9 @@ class _TransactionsPageState extends State<TransactionsPage> {
                       isScrollControlled: true,
                       builder: (context) => FilterBottomSheet(
                         initialFilters: _filters,
+                        categories: _allCategories,
                         onApply: (newFilters) {
-                          setState(() {
-                            _filters = newFilters;
-                          });
-                          Navigator.pop(context);
+                          setState(() => _filters = newFilters);
                           _loadTransactions();
                         },
                       ),
