@@ -13,12 +13,14 @@ class TransactionRepositoryImpl implements TransactionRepository {
     int limit = 20,
     String? category,
     String? type,
+    String? searchQuery,
   }) async {
     return _service.getTransactions(
       page: page,
       limit: limit,
       category: category,
       type: type,
+      searchQuery: searchQuery,
     );
   }
 

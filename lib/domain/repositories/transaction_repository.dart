@@ -6,6 +6,7 @@ abstract class TransactionRepository {
     String? category,
     String? type,
     int limit,
+    String? searchQuery,
   });
   Future<void> addTransaction(Transaction transaction);
   Future<void> updateTransaction(String id, Transaction transaction);

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../domain/entities/transaction.dart';
@@ -20,7 +22,13 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     LoadTransactions event,
     Emitter<TransactionState> emit,
   ) async {
-    emit(TransactionLoading());
+    emit(
+      TransactionLoading(
+        transactions: state is TransactionLoaded
+            ? (state as TransactionLoaded).transactions
+            : null,
+      ),
+    );
 
     try {
       final newTransactions = await _repository.getTransactions(
@@ -28,13 +36,13 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         type: event.filters['type'],
         limit: event.limit,
         category: event.filters['category'],
+        searchQuery: event.searchQuery,
       );
 
       if (event.page == 1) {
         final hasMore = newTransactions.length == event.limit;
         emit(TransactionLoaded(newTransactions, hasMore));
       } else {
-        // Subsequent page — append
         if (state is TransactionLoaded) {
           final currentState = state as TransactionLoaded;
           final updatedList = List<Transaction>.from(currentState.transactions)
@@ -47,7 +55,10 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
           );
         } else {
           emit(
-            TransactionLoaded(newTransactions, newTransactions.length == 20),
+            TransactionLoaded(
+              newTransactions,
+              newTransactions.length == event.limit,
+            ),
           );
         }
       }
@@ -55,8 +66,6 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       emit(TransactionError('Failed to load transactions: $e'));
     }
   }
-
-  // lib/features/transactions/bloc/transaction_bloc.dart
 
   Future<void> _onAddTransaction(
     AddTransaction event,

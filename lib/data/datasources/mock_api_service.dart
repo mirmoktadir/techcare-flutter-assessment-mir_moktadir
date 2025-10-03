@@ -307,6 +307,7 @@ class MockApiService {
     int limit = 20,
     String? category,
     String? type,
+    String? searchQuery,
   }) async {
     await Future.delayed(const Duration(milliseconds: 800));
     if (_random.nextInt(10) == 0) throw Exception('Network error');
@@ -314,6 +315,14 @@ class MockApiService {
     final filtered = _transactions.where((t) {
       if (type != null && t.type != type) return false;
       if (category != null && t.category.id != category) return false;
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        final query = searchQuery.toLowerCase();
+        if (!t.title.toLowerCase().contains(query) &&
+            !(t.description?.toLowerCase().contains(query) ?? false) &&
+            !t.category.name.toLowerCase().contains(query)) {
+          return false;
+        }
+      }
       return true;
     }).toList();
 

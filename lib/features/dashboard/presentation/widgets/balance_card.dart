@@ -93,7 +93,6 @@ class _BalanceCardState extends State<BalanceCard>
     );
   }
 
-  /// Fake glass effect (works even on white background)
   Widget _glassContainer({required Widget child}) {
     return Container(
       decoration: BoxDecoration(

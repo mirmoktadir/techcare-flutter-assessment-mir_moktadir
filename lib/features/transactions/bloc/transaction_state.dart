@@ -10,8 +10,10 @@ class TransactionInitial extends TransactionState {
 }
 
 class TransactionLoading extends TransactionState {
+  late final List<Transaction>? transactions;
+  TransactionLoading({this.transactions});
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [transactions];
 }
 
 class TransactionLoaded extends TransactionState {
