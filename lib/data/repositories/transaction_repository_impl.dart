@@ -5,7 +5,19 @@ import '../datasources/mock_api_service.dart';
 class TransactionRepositoryImpl implements TransactionRepository {
   final MockApiService _service;
 
+  final Map<String, List<Transaction>> _cache = {};
+
   TransactionRepositoryImpl(this._service);
+
+  String _getCacheKey({
+    required int page,
+    required int limit,
+    String? category,
+    String? type,
+    String? searchQuery,
+  }) {
+    return 'page:$page|limit:$limit|cat:$category|type:$type|search:$searchQuery';
+  }
 
   @override
   Future<List<Transaction>> getTransactions({
@@ -15,27 +27,45 @@ class TransactionRepositoryImpl implements TransactionRepository {
     String? type,
     String? searchQuery,
   }) async {
-    return _service.getTransactions(
+    final cacheKey = _getCacheKey(
       page: page,
       limit: limit,
       category: category,
       type: type,
       searchQuery: searchQuery,
     );
+
+    if (_cache.containsKey(cacheKey)) {
+      return _cache[cacheKey]!;
+    }
+
+    final transactions = await _service.getTransactions(
+      page: page,
+      limit: limit,
+      category: category,
+      type: type,
+      searchQuery: searchQuery,
+    );
+
+    _cache[cacheKey] = transactions;
+    return transactions;
   }
 
   @override
   Future<void> addTransaction(Transaction transaction) async {
+    _cache.clear();
     return _service.addTransaction(transaction);
   }
 
   @override
   Future<void> updateTransaction(String id, Transaction transaction) async {
-    return _service.updateTransaction(id, transaction); // ✅ delegated
+    _cache.clear();
+    return _service.updateTransaction(id, transaction);
   }
 
   @override
   Future<void> deleteTransaction(String id) async {
-    return _service.deleteTransaction(id); // ✅ delegated
+    _cache.clear();
+    return _service.deleteTransaction(id);
   }
 }
