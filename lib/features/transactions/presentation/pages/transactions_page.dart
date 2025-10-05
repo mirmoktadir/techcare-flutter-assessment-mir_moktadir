@@ -339,7 +339,30 @@ class _TransactionsPageState extends State<TransactionsPage> {
     );
   }
 
-  void _deleteTransaction(String id) {
-    context.read<TransactionBloc>().add(DeleteTransaction(id));
+  void _deleteTransaction(String id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Transaction'),
+        content: const Text(
+          'Are you sure you want to delete this transaction?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      if (mounted) {
+        context.read<TransactionBloc>().add(DeleteTransaction(id));
+      }
+    }
   }
 }

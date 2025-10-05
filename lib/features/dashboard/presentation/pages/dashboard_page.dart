@@ -293,8 +293,31 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  void _deleteTransaction(String id, BuildContext context) {
-    context.read<TransactionBloc>().add(DeleteTransaction(id));
+  void _deleteTransaction(String id, BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Transaction'),
+        content: const Text(
+          'Are you sure you want to delete this transaction?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      if (context.mounted) {
+        context.read<TransactionBloc>().add(DeleteTransaction(id));
+      }
+    }
   }
 
   Widget _buildPieChart(List<CategoryBreakdown> breakdown) {

@@ -169,9 +169,11 @@ class TransactionDetailsPage extends StatelessWidget {
           ),
         );
         if (confirm == true) {
-          context.read<TransactionBloc>().add(
-            DeleteTransaction(transaction.id),
-          );
+          if (context.mounted) {
+            context.read<TransactionBloc>().add(
+              DeleteTransaction(transaction.id),
+            );
+          }
         }
       },
       icon: const Icon(Icons.delete, color: Colors.red),
