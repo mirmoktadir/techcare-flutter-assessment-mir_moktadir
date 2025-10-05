@@ -18,6 +18,7 @@ import '../../../transactions/bloc/transaction_bloc.dart';
 import '../../../transactions/bloc/transaction_event.dart';
 import '../../../transactions/bloc/transaction_state.dart';
 import '../../../transactions/presentation/pages/add_transaction_page.dart';
+import '../../../transactions/presentation/pages/transaction_details_page.dart';
 import '../../../transactions/presentation/pages/transactions_page.dart';
 import '../widgets/balance_card.dart';
 
@@ -205,7 +206,6 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // 🔹 GROUP TRANSACTIONS BY DATE
   Map<DateTime, List<Transaction>> _groupTransactionsByDate(
     List<Transaction> transactions,
   ) {
@@ -219,7 +219,6 @@ class _DashboardPageState extends State<DashboardPage> {
     return {for (var key in sortedKeys) key: map[key]!};
   }
 
-  // 🔹 SWIPEABLE TRANSACTION ITEM
   Widget _buildSwipeableItem(Transaction txn, BuildContext context) {
     return Slidable(
       startActionPane: ActionPane(
@@ -247,6 +246,23 @@ class _DashboardPageState extends State<DashboardPage> {
         ],
       ),
       child: ListTile(
+        onTap: () {
+          final transactionBloc = context.read<TransactionBloc>();
+
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            builder: (context) {
+              return BlocProvider.value(
+                value: transactionBloc,
+                child: TransactionDetailsPage(
+                  transaction: txn,
+                  heroTag: 'amount_${txn.id}',
+                ),
+              );
+            },
+          );
+        },
         leading: CircleAvatar(
           backgroundColor: txn.type == 'income'
               ? Colors.green.withValues(alpha: 0.2)
@@ -281,7 +297,6 @@ class _DashboardPageState extends State<DashboardPage> {
     context.read<TransactionBloc>().add(DeleteTransaction(id));
   }
 
-  // 🔹 PIE CHART
   Widget _buildPieChart(List<CategoryBreakdown> breakdown) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -320,15 +335,12 @@ class _DashboardPageState extends State<DashboardPage> {
                   centerSpaceRadius: 45,
                   startDegreeOffset: -90,
                   pieTouchData: PieTouchData(
-                    touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                      // Optional: highlight on tap
-                    },
+                    touchCallback: (FlTouchEvent event, pieTouchResponse) {},
                   ),
                 ),
               ),
             ),
             const SizedBox(height: 12),
-            // Add legend
             Wrap(
               spacing: 12,
               runSpacing: 8,
@@ -359,7 +371,6 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // 🔹 SHIMMER LOADERS
   Widget _buildBalanceShimmer() {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -427,7 +438,6 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // 🔹 TRANSACTION GROUPS
   Widget _buildTransactionGroups(
     Map<DateTime, List<Transaction>> grouped,
     BuildContext context,
@@ -497,6 +507,6 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   String _formatDate(DateTime date) {
-    return DateFormat('MMMM d, yyyy').format(date); // e.g., "October 1, 2025"
+    return DateFormat('MMMM d, yyyy').format(date);
   }
 }

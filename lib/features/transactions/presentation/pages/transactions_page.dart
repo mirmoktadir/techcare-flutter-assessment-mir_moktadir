@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:finance_tracker/features/transactions/presentation/pages/transaction_details_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -123,7 +124,6 @@ class _TransactionsPageState extends State<TransactionsPage> {
       ),
       body: Column(
         children: [
-          // 🔹 Filter Chip
           Padding(
             padding: const EdgeInsets.all(8),
             child: Row(
@@ -165,7 +165,6 @@ class _TransactionsPageState extends State<TransactionsPage> {
               ],
             ),
           ),
-          // 🔹 Transaction List
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async => _loadTransactions(),
@@ -226,7 +225,6 @@ class _TransactionsPageState extends State<TransactionsPage> {
   }
 
   Widget _buildTransactionList(List<Transaction> transactions) {
-    // Group by date
     final grouped = _groupTransactionsByDate(transactions);
 
     return CustomScrollView(
@@ -266,6 +264,23 @@ class _TransactionsPageState extends State<TransactionsPage> {
                     ],
                   ),
                   child: ListTile(
+                    onTap: () {
+                      final transactionBloc = context.read<TransactionBloc>();
+
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        builder: (context) {
+                          return BlocProvider.value(
+                            value: transactionBloc,
+                            child: TransactionDetailsPage(
+                              transaction: txn,
+                              heroTag: 'amount_${txn.id}',
+                            ),
+                          );
+                        },
+                      );
+                    },
                     leading: CircleAvatar(
                       backgroundColor: txn.type == 'income'
                           ? Colors.green.withValues(alpha: 0.2)
