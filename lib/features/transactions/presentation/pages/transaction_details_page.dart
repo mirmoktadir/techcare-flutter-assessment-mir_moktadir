@@ -27,73 +27,75 @@ class TransactionDetailsPage extends StatelessWidget {
           Navigator.pop(context); // Close modal on success
         }
       },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey,
-                    borderRadius: BorderRadius.circular(2),
+      child: SafeArea(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
               ),
-            ),
-            // 🔹 Amount (Hero)
-            Hero(
-              tag: heroTag,
-              child: Text(
-                NumberFormatter.format(transaction.amount),
-                style: const TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildTypeBadge(transaction.type),
-                const SizedBox(width: 12),
-                _buildCategoryBadge(transaction.category),
-              ],
-            ),
-            const SizedBox(height: 16),
-            // 🔹 Date
-            Text(
-              '${_formatDate(transaction.date)} at ${_formatTime(transaction.date)}',
-              style: const TextStyle(color: Colors.grey),
-            ),
-            const SizedBox(height: 16),
-            if (transaction.description != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+              // 🔹 Amount (Hero)
+              Hero(
+                tag: heroTag,
                 child: Text(
-                  transaction.description!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 16),
+                  NumberFormatter.format(transaction.amount),
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildEditButton(context),
-                _buildDeleteButton(context),
-              ],
-            ),
-            const SizedBox(height: 16),
-          ],
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildTypeBadge(transaction.type),
+                  const SizedBox(width: 12),
+                  _buildCategoryBadge(transaction.category),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // 🔹 Date
+              Text(
+                '${_formatDate(transaction.date)} at ${_formatTime(transaction.date)}',
+                style: const TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 16),
+              if (transaction.description != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Text(
+                    transaction.description!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildEditButton(context),
+                  _buildDeleteButton(context),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
