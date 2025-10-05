@@ -174,11 +174,43 @@ class _TransactionsPageState extends State<TransactionsPage> {
                     return _buildShimmerList();
                   } else if (state is TransactionLoaded) {
                     if (state.transactions.isEmpty) {
-                      return const Center(child: Text('No transactions found'));
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text('No transactions found'),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              height: 40,
+                              width: 120,
+                              child: ElevatedButton(
+                                onPressed: () => _loadTransactions(),
+                                child: const Text('Refresh'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
                     }
                     return _buildTransactionList(state.transactions);
                   } else if (state is TransactionError) {
-                    return Center(child: Text('Error: ${state.message}'));
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Error: ${state.message}'),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            height: 40,
+                            width: 120,
+                            child: ElevatedButton(
+                              onPressed: () => _loadTransactions(),
+                              child: const Text('Refresh'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
                   } else {
                     return _buildShimmerList();
                   }
