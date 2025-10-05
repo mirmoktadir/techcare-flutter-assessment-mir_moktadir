@@ -1,7 +1,6 @@
 import '../../domain/entities/analytics.dart';
 import 'category_model.dart';
 
-// Model for /api/analytics response root
 class AnalyticsResponseModel {
   final AnalyticsDataModel data;
 
@@ -13,6 +12,10 @@ class AnalyticsResponseModel {
         .map((cb) => cb.toEntity())
         .toList(),
     monthlyTrend: data.monthlyTrend.map((mt) => mt.toEntity()).toList(),
+    categoryTrends: {
+      for (var entry in data.categoryTrends.entries)
+        entry.key: entry.value.map((t) => t.toEntity()).toList(),
+    },
   );
 
   factory AnalyticsResponseModel.fromJson(Map<String, dynamic> json) {
@@ -27,11 +30,13 @@ class AnalyticsDataModel {
   final AnalyticsSummaryModel summary;
   final List<CategoryBreakdownModel> categoryBreakdown;
   final List<MonthlyTrendModel> monthlyTrend;
+  final Map<String, List<MonthlyTrendModel>> categoryTrends;
 
   AnalyticsDataModel({
     required this.summary,
     required this.categoryBreakdown,
     required this.monthlyTrend,
+    required this.categoryTrends,
   });
 
   factory AnalyticsDataModel.fromJson(Map<String, dynamic> json) {
@@ -42,21 +47,31 @@ class AnalyticsDataModel {
     final trend = (json['monthlyTrend'] as List)
         .map((item) => MonthlyTrendModel.fromJson(item))
         .toList();
+    final trendsMap = <String, List<MonthlyTrendModel>>{};
+    final trendsJson = json['categoryTrends'] as Map<String, dynamic>?;
+    if (trendsJson != null) {
+      trendsJson.forEach((key, value) {
+        final list = (value as List)
+            .map((e) => MonthlyTrendModel.fromJson(e))
+            .toList();
+        trendsMap[key] = list;
+      });
+    }
 
     return AnalyticsDataModel(
       summary: summary,
       categoryBreakdown: breakdown,
       monthlyTrend: trend,
+      categoryTrends: trendsMap,
     );
   }
 }
 
-// Model for "summary"
 class AnalyticsSummaryModel {
   final double totalIncome;
   final double totalExpense;
   final double netBalance;
-  final double savingsRate; // ← MUST be here
+  final double savingsRate;
 
   AnalyticsSummaryModel({
     required this.totalIncome,
@@ -69,7 +84,7 @@ class AnalyticsSummaryModel {
     totalIncome: totalIncome,
     totalExpense: totalExpense,
     netBalance: netBalance,
-    savingsRate: savingsRate, // ← mapped to domain
+    savingsRate: savingsRate,
   );
 
   factory AnalyticsSummaryModel.fromJson(Map<String, dynamic> json) {
@@ -77,12 +92,11 @@ class AnalyticsSummaryModel {
       totalIncome: (json['totalIncome'] as num?)?.toDouble() ?? 0.0,
       totalExpense: (json['totalExpense'] as num?)?.toDouble() ?? 0.0,
       netBalance: (json['netBalance'] as num?)?.toDouble() ?? 0.0,
-      savingsRate: (json['savingsRate'] as num?)?.toDouble() ?? 0.0, // ← parsed
+      savingsRate: (json['savingsRate'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }
 
-// Model for "categoryBreakdown" item
 class CategoryBreakdownModel {
   final CategoryModel category;
   final double amount;
@@ -121,7 +135,6 @@ class CategoryBreakdownModel {
   }
 }
 
-// Model for "monthlyTrend" item
 class MonthlyTrendModel {
   final String month;
   final double income;

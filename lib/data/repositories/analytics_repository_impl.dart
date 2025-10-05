@@ -5,7 +5,7 @@ import '../datasources/mock_api_service.dart';
 class AnalyticsRepositoryImpl implements AnalyticsRepository {
   final MockApiService _service;
 
-  AnalyticsRepositoryImpl(this._service); // ← takes MockApiService, NOT Dio
+  AnalyticsRepositoryImpl(this._service);
 
   @override
   Future<AnalyticsData> getAnalytics({

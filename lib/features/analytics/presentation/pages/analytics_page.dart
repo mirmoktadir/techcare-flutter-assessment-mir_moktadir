@@ -19,8 +19,8 @@ class _AnalyticsPageState extends State<AnalyticsPage>
     with TickerProviderStateMixin {
   late final AnimationController _lineChartController;
   late final AnimationController _barChartController;
-  bool _showLineChart = false;
-  bool _showBarChart = false;
+  String _selectedPeriod = 'month';
+  String? _selectedCategory;
 
   @override
   void initState() {
@@ -33,14 +33,14 @@ class _AnalyticsPageState extends State<AnalyticsPage>
       vsync: this,
       duration: const Duration(milliseconds: 1000),
     );
+    _loadData();
+  }
 
-    // Load data and start animations
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AnalyticsBloc>().add(LoadAnalytics());
-      _lineChartController.forward();
-      Future.delayed(const Duration(milliseconds: 300), () {
-        _barChartController.forward();
-      });
+  void _loadData() {
+    context.read<AnalyticsBloc>().add(LoadAnalytics(period: _selectedPeriod));
+    _lineChartController.forward();
+    Future.delayed(const Duration(milliseconds: 300), () {
+      _barChartController.forward();
     });
   }
 
@@ -74,74 +74,110 @@ class _AnalyticsPageState extends State<AnalyticsPage>
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // Summary Cards
-        Row(
+        Wrap(
+          spacing: 8,
           children: [
-            _buildMetricCard('Income', data.summary.totalIncome, Colors.green),
-            const SizedBox(width: 12),
-            _buildMetricCard('Expense', data.summary.totalExpense, Colors.red),
-            const SizedBox(width: 12),
-            _buildMetricCard('Balance', data.summary.netBalance, Colors.blue),
+            _buildPeriodChip('This Week', 'week'),
+            _buildPeriodChip('This Month', 'month'),
+            _buildPeriodChip('Last 3 Months', '3months'),
+            _buildPeriodChip('Custom', 'custom'),
           ],
         ),
         const SizedBox(height: 24),
 
-        // Spending Trend Chart
+        Row(
+          children: [
+            _buildMetricCard(
+              'Income',
+              data.summary.totalIncome,
+              Colors.green,
+              '+2.3%',
+            ),
+            const SizedBox(width: 12),
+            _buildMetricCard(
+              'Expense',
+              data.summary.totalExpense,
+              Colors.red,
+              '-1.1%',
+            ),
+            const SizedBox(width: 12),
+            _buildMetricCard(
+              'Balance',
+              data.summary.netBalance,
+              Colors.blue,
+              '+5.2%',
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+
         const Text(
-          'Spending Trend (Last 6 Months)',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          'Spending Trend',
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        SizedBox(height: 250, child: _buildLineChart(data.monthlyTrend)),
+        SizedBox(height: 250, child: _buildLineChart(data)),
         const SizedBox(height: 24),
 
         // Category Breakdown
         const Text(
           'Category Breakdown',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        SizedBox(height: 200, child: _buildBarChart(data.categoryBreakdown)),
+        SizedBox(height: 300, child: _buildBarChart(data.categoryBreakdown)),
         const SizedBox(height: 24),
 
         // Budget Progress
         const Text(
           'Budget Progress',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        ...data.categoryBreakdown.map(_buildBudgetProgress).toList(),
+        ...data.categoryBreakdown.map(_buildBudgetProgress),
       ],
     );
   }
 
-  Widget _buildLineChart(List<MonthlyTrend> trend) {
+  Widget _buildPeriodChip(String label, String value) {
+    final isSelected = _selectedPeriod == value;
+    return FilterChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (selected) {
+        if (selected) {
+          setState(() => _selectedPeriod = value);
+          _loadData();
+        }
+      },
+    );
+  }
+
+  Widget _buildLineChart(AnalyticsData data) {
+    final trend = _selectedCategory != null
+        ? data.categoryTrends[_selectedCategory] ?? []
+        : data.monthlyTrend;
+
     return LineChart(
       LineChartData(
         lineBarsData: [
           LineChartBarData(
             spots: trend.asMap().entries.map((e) {
-              return FlSpot(
-                e.key.toDouble(),
-                _lineChartController.value * e.value.income,
-              );
+              return FlSpot(e.key.toDouble(), e.value.income);
             }).toList(),
             color: Colors.green,
             barWidth: 2,
             isCurved: true,
-            dotData: const FlDotData(show: false),
+            dotData: const FlDotData(show: true),
           ),
           LineChartBarData(
             spots: trend.asMap().entries.map((e) {
-              return FlSpot(
-                e.key.toDouble(),
-                _lineChartController.value * e.value.expense,
-              );
+              return FlSpot(e.key.toDouble(), e.value.expense);
             }).toList(),
             color: Colors.red,
             barWidth: 2,
             isCurved: true,
-            dotData: const FlDotData(show: false),
+            dotData: const FlDotData(show: true),
           ),
         ],
         titlesData: FlTitlesData(
@@ -160,33 +196,47 @@ class _AnalyticsPageState extends State<AnalyticsPage>
           leftTitles: const AxisTitles(
             sideTitles: SideTitles(showTitles: false),
           ),
-          topTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          rightTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
+          rightTitles: AxisTitles(
+            sideTitles: SideTitles(
+              getTitlesWidget: (value, meta) {
+                final formatted = _formatAsK(value); // e.g., 85000 → "85K"
+                return Text(formatted);
+              },
+              showTitles: true,
+            ),
           ),
         ),
         gridData: const FlGridData(show: true),
         borderData: FlBorderData(show: false),
+        lineTouchData: LineTouchData(enabled: true),
       ),
     );
   }
 
+  String _formatAsK(double value) {
+    if (value >= 1000) {
+      return '${(value / 1000).toInt()}K';
+    }
+    return value.toInt().toString();
+  }
+
   Widget _buildBarChart(List<CategoryBreakdown> breakdown) {
+    final sorted = List<CategoryBreakdown>.from(breakdown)
+      ..sort((a, b) => b.amount.compareTo(a.amount));
+
     return BarChart(
       BarChartData(
-        barGroups: breakdown.asMap().entries.map((e) {
+        barGroups: sorted.asMap().entries.map((e) {
           return BarChartGroupData(
             x: e.key,
             barRods: [
               BarChartRodData(
-                toY: _barChartController.value * e.value.amount,
+                toY: e.value.amount,
                 color: Color(
                   int.parse(e.value.category.color.substring(1), radix: 16) +
                       0xFF000000,
                 ),
-                width: 20,
+                width: 24,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(6),
                   topRight: Radius.circular(6),
@@ -200,10 +250,20 @@ class _AnalyticsPageState extends State<AnalyticsPage>
             sideTitles: SideTitles(
               getTitlesWidget: (value, meta) {
                 final index = value.toInt();
-                if (index >= 0 && index < breakdown.length) {
+                if (index >= 0 && index < sorted.length) {
                   return RotatedBox(
                     quarterTurns: 1,
-                    child: Text(breakdown[index].category.name),
+                    child: Container(
+                      width: 70,
+                      alignment: Alignment.center,
+                      child: Text(
+                        sorted[index].category.name,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 11),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   );
                 }
                 return const Text('');
@@ -213,10 +273,56 @@ class _AnalyticsPageState extends State<AnalyticsPage>
           ),
           leftTitles: const AxisTitles(
             sideTitles: SideTitles(showTitles: false),
+          ), // 👈 HIDE LEFT AXIS
+          rightTitles: AxisTitles(
+            sideTitles: SideTitles(
+              getTitlesWidget: (value, meta) {
+                final formatted = _formatAsK(value);
+                return Text(formatted);
+              },
+              showTitles: true,
+            ),
           ),
         ),
+        barTouchData: BarTouchData(enabled: true),
         borderData: FlBorderData(show: false),
         gridData: const FlGridData(show: true),
+      ),
+    );
+  }
+
+  Widget _buildMetricCard(
+    String label,
+    double value,
+    Color color,
+    String change,
+  ) {
+    return Expanded(
+      child: Card(
+        color: color.withValues(alpha: 0.1),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: value),
+                duration: const Duration(milliseconds: 800),
+                builder: (context, val, child) => Text(
+                  NumberFormatter.format(val),
+                  style: TextStyle(color: color, fontWeight: FontWeight.bold),
+                ),
+              ),
+              Text(
+                change,
+                style: TextStyle(
+                  color: change.startsWith('+') ? Colors.green : Colors.red,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -236,7 +342,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
         child: Row(
           children: [
             CircleAvatar(
-              backgroundColor: getColor().withOpacity(0.2),
+              backgroundColor: getColor().withValues(alpha: 0.2),
               child: Icon(_getIconData(item.category.icon), color: getColor()),
             ),
             const SizedBox(width: 12),
@@ -245,7 +351,6 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(item.category.name),
-                  const SizedBox(height: 4),
                   LinearProgressIndicator(
                     value: utilization / 100,
                     backgroundColor: Colors.grey[300],
@@ -284,37 +389,5 @@ class _AnalyticsPageState extends State<AnalyticsPage>
       default:
         return Icons.category;
     }
-  }
-
-  Widget _buildMetricCard(String label, double value, Color color) {
-    return Expanded(
-      child: Card(
-        color: color.withOpacity(0.1),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                NumberFormatter.format(value),
-                style: TextStyle(
-                  color: color,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }

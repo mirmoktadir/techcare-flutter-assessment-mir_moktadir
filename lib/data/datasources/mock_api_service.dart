@@ -300,6 +300,25 @@ class MockApiService {
       MonthlyTrend(month: "2025-08", income: 83000.00, expense: 49000.00),
       MonthlyTrend(month: "2025-09", income: 85000.00, expense: 52000.00),
     ],
+    categoryTrends: {
+      'cat_001': [
+        MonthlyTrend(month: "2025-04", income: 0, expense: 4000),
+        MonthlyTrend(month: "2025-05", income: 0, expense: 4200),
+        MonthlyTrend(month: "2025-06", income: 0, expense: 4500),
+        MonthlyTrend(month: "2025-07", income: 0, expense: 4800),
+        MonthlyTrend(month: "2025-08", income: 0, expense: 4300),
+        MonthlyTrend(month: "2025-09", income: 0, expense: 4700),
+      ],
+      'cat_002': [
+        MonthlyTrend(month: "2025-04", income: 0, expense: 2000),
+        MonthlyTrend(month: "2025-05", income: 0, expense: 2200),
+        MonthlyTrend(month: "2025-06", income: 0, expense: 2400),
+        MonthlyTrend(month: "2025-07", income: 0, expense: 2500),
+        MonthlyTrend(month: "2025-08", income: 0, expense: 2300),
+        MonthlyTrend(month: "2025-09", income: 0, expense: 2600),
+      ],
+      // Add more as needed
+    },
   );
 
   Future<List<Transaction>> getTransactions({

@@ -4,11 +4,12 @@ class AnalyticsData {
   final AnalyticsSummary summary;
   final List<CategoryBreakdown> categoryBreakdown;
   final List<MonthlyTrend> monthlyTrend;
-
+  final Map<String, List<MonthlyTrend>> categoryTrends;
   AnalyticsData({
     required this.summary,
     required this.categoryBreakdown,
     required this.monthlyTrend,
+    required this.categoryTrends,
   });
 }
 
